@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gym Performance Tracker</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white pb-12">
+
+    <!-- Header -->
+    <div class="p-5 bg-gray-800 border-b border-gray-700 sticky top-0 z-50 flex justify-between items-center">
+        <div>
+            <h1 class="text-xl font-bold text-emerald-400">GymTracker PRO</h1>
+            <p class="text-xs text-gray-400">Target: Weight Gain (Bulk)</p>
+        </div>
+        <div id="todayScore" class="text-right">
+            <span class="text-xs text-gray-400">Skor Hari Ini</span>
+            <div class="text-lg font-black text-amber-400" id="fitnessScoreDisplay">0 PTS</div>
+        </div>
+    </div>
+
+    <div class="p-4 space-y-6 max-w-md mx-auto">
+
+        <!-- DASHBOARD RINGKASAN PRESTASI & MATLAMAT BMI -->
+        <div class="space-y-3">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400">📊 Dashboard Bulanan & Status BMI</h2>
+            
+            <!-- BMI & Status Weight Gain Card -->
+            <div class="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 p-4 rounded-xl border border-purple-700/50">
+                <div class="flex justify-between items-center mb-2">
+                    <div>
+                        <span class="text-[10px] text-purple-300 font-bold uppercase tracking-wider">Sasaran Berat (Tinggi: 168cm)</span>
+                        <div class="text-lg font-extrabold text-white"><span id="dashBMI">--</span> <span class="text-xs font-normal text-purple-200">(BMI Ideal Target: 18.5)</span></div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] text-purple-300 font-bold uppercase">Baki ke Target</span>
+                        <div class="text-base font-black text-emerald-400" id="dashWeightGap">-- kg lagi</div>
+                    </div>
+                </div>
+                <div class="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
+                    <div id="bmiProgressBar" class="bg-emerald-400 h-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- 4 Metrics Grid -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
+                    <p class="text-[11px] text-gray-400">Sesi Workout</p>
+                    <p class="text-xl font-black text-emerald-400" id="dashSessions">0 Hari</p>
+                </div>
+                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
+                    <p class="text-[11px] text-gray-400">Jumlah Volum</p>
+                    <p class="text-xl font-black text-blue-400" id="dashVolume">0 Kg</p>
+                </div>
+                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
+                    <p class="text-[11px] text-gray-400">Purata Skor (PTS)</p>
+                    <p class="text-xl font-black text-amber-400" id="dashAvgScore">0 PTS</p>
+                </div>
+                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
+                    <p class="text-[11px] text-gray-400">Berat Terkini</p>
+                    <p class="text-xl font-black text-purple-400" id="dashLatestWeight">49.0 Kg</p>
+                </div>
+            </div>
+
+            <!-- Line Chart Berat Badan -->
+            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                <h3 class="text-xs font-semibold text-gray-300 mb-3">📈 Trend Berat Badan (Line Chart)</h3>
+                <div id="weightChartContainer" class="relative h-32 w-full flex items-center justify-center">
+                    <p class="text-xs text-gray-500 italic">Tiada data berat disimpan</p>
+                </div>
+            </div>
+
+            <!-- PANDUAN PENTING BINA OTOT (DAILY HEALTH GUIDE) -->
+            <div class="bg-gray-800 p-4 rounded-xl border border-emerald-500/30 space-y-3">
+                <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                    💡 Panduan Harian Naiki Berat Badan
+                </h3>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="bg-gray-700/40 p-2.5 rounded-lg border border-gray-700">
+                        <div class="font-bold text-amber-300">🍚 Makan Surplus</div>
+                        <div class="text-[11px] text-gray-300 mt-0.5">Tambah ~500 kalori/hari (makanan kaya protein & karbohidrat).</div>
+                    </div>
+                    <div class="bg-gray-700/40 p-2.5 rounded-lg border border-gray-700">
+                        <div class="font-bold text-blue-300">💧 Air 3 Liter+</div>
+                        <div class="text-[11px] text-gray-300 mt-0.5">Membantu pengangkutan nutrien & besarkan sel otot.</div>
+                    </div>
+                    <div class="bg-gray-700/40 p-2.5 rounded-lg border border-gray-700">
+                        <div class="font-bold text-indigo-300">😴 Tidur 7-8 Jam</div>
+                        <div class="text-[11px] text-gray-300 mt-0.5">Hormon pembesaran otot dirembeskan secara maksimum semasa tidur.</div>
+                    </div>
+                    <div class="bg-gray-700/40 p-2.5 rounded-lg border border-gray-700">
+                        <div class="font-bold text-emerald-300">🛋️ Hari Rehat (Rest)</div>
+                        <div class="text-[11px] text-gray-300 mt-0.5">Bagi ruang tisu otot dibina semula menjadi lebih besar.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="border-gray-800">
+
+        <!-- Section 1: Rekod Berat Badan Hari Ini -->
+        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+            <h2 class="text-sm font-semibold text-gray-300 mb-2">⚖️ Berat Badan Hari Ini (Kg)</h2>
+            <div class="flex gap-2">
+                <input type="number" id="bodyWeightInput" step="0.1" placeholder="Contoh: 49.5" class="bg-gray-700 text-white px-3 py-2 rounded-lg w-full text-sm border border-gray-600 focus:outline-none focus:border-emerald-500">
+                <button onclick="saveBodyWeight()" class="bg-emerald-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-500 transition">Simpan</button>
+            </div>
+            <p id="weightStatus" class="text-xs text-emerald-400 mt-2 hidden">✓ Berat disimpan!</p>
+        </div>
+
+        <!-- Section 2: Copy Workout Hari Lepas -->
+        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 space-y-2">
+            <h2 class="text-sm font-semibold text-gray-300">📋 Salin (Copy) Workout Lepas</h2>
+            <div class="flex gap-2">
+                <select id="pastDatesSelect" class="bg-gray-700 text-white px-3 py-2 rounded-lg w-full text-xs border border-gray-600 focus:outline-none focus:border-emerald-500">
+                    <option value="">-- Pilih Rekod Sesi Lepas --</option>
+                </select>
+                <button onclick="copyWorkoutFromPast()" class="bg-purple-600 text-xs px-3 py-2 rounded-lg font-bold hover:bg-purple-500 transition whitespace-nowrap">Copy Sesi</button>
+            </div>
+        </div>
+
+        <!-- Section 3: Tambah Workout Baru -->
+        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 space-y-3">
+            <h2 class="text-sm font-semibold text-gray-300">🏋️ Tambah Senaman Manual</h2>
+            <div>
+                <input type="text" id="exerciseName" placeholder="Nama Senaman (cth: Dumbbell Press)" class="bg-gray-700 text-white px-3 py-2 rounded-lg w-full text-sm border border-gray-600 focus:outline-none focus:border-emerald-500 mb-2">
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="text-[10px] text-gray-400">Set</label>
+                        <input type="number" id="setsInput" value="3" class="bg-gray-700 text-white px-2 py-1.5 rounded-lg w-full text-sm border border-gray-600">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-gray-400">Reps / Set</label>
+                        <input type="number" id="repsInput" placeholder="10" class="bg-gray-700 text-white px-2 py-1.5 rounded-lg w-full text-sm border border-gray-600">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-gray-400">Beban (Kg)</label>
+                        <input type="number" id="weightInput" placeholder="10" class="bg-gray-700 text-white px-2 py-1.5 rounded-lg w-full text-sm border border-gray-600">
+                    </div>
+                </div>
+            </div>
+            <button onclick="addExercise()" class="w-full bg-blue-600 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-500 transition">+ Tambah Senaman</button>
+        </div>
+
+        <!-- Section 4: Senarai Senaman Hari Ini -->
+        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+            <h2 class="text-sm font-semibold text-gray-300 mb-3">📋 Senarai Workout Hari Ini</h2>
+            <div id="exerciseList" class="space-y-2">
+                <p class="text-xs text-gray-500 italic text-center py-2">Belum ada senaman ditambah hari ini.</p>
+            </div>
+        </div>
+
+        <!-- Section 5: Kalendar Prestasi Bulanan -->
+        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-sm font-semibold text-gray-300">📅 Kalendar Kedatangan Gym</h2>
+                <span id="currentMonthYear" class="text-xs text-emerald-400 font-bold"></span>
+            </div>
+            <div class="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-400 mb-2">
+                <div>A</div><div>I</div><div>S</div><div>R</div><div>K</div><div>J</div><div>S</div>
+            </div>
+            <div id="calendarGrid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+            
+            <div class="flex gap-4 justify-center mt-4 text-[11px] text-gray-400">
+                <div class="flex items-center gap-1"><div class="w-3 h-3 bg-emerald-500 rounded"></div> Turun Gym</div>
+                <div class="flex items-center gap-1"><div class="w-3 h-3 bg-gray-700 rounded"></div> Rest / Off</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const todayStr = new Date().toISOString().split('T')[0];
+        let appData = JSON.parse(localStorage.getItem('gymAppData')) || {};
+
+        if (!appData[todayStr]) {
+            appData[todayStr] = { weight: 49.0, exercises: [], score: 0 };
+        }
+
+        function saveData() {
+            localStorage.setItem('gymAppData', JSON.stringify(appData));
+            renderAll();
+        }
+
+        function calculateScore(dateKey = todayStr) {
+            const dayData = appData[dateKey];
+            if (!dayData || !dayData.exercises) return 0;
+            
+            let totalVolume = 0;
+            dayData.exercises.forEach(ex => {
+                totalVolume += (ex.sets * ex.reps * ex.weight);
+            });
+            return Math.round(totalVolume / 10);
+        }
+
+        function saveBodyWeight() {
+            const val = parseFloat(document.getElementById('bodyWeightInput').value);
+            if (val) {
+                appData[todayStr].weight = val;
+                saveData();
+                document.getElementById('weightStatus').classList.remove('hidden');
+                setTimeout(() => document.getElementById('weightStatus').classList.add('hidden'), 2000);
+            }
+        }
+
+        function addExercise() {
+            const name = document.getElementById('exerciseName').value;
+            const sets = parseInt(document.getElementById('setsInput').value);
+            const reps = parseInt(document.getElementById('repsInput').value);
+            const weight = parseFloat(document.getElementById('weightInput').value);
+
+            if (name && sets && reps && !isNaN(weight)) {
+                appData[todayStr].exercises.push({ id: Date.now(), name, sets, reps, weight });
+                appData[todayStr].score = calculateScore();
+                saveData();
+
+                document.getElementById('exerciseName').value = '';
+                document.getElementById('repsInput').value = '';
+                document.getElementById('weightInput').value = '';
+            }
+        }
+
+        function removeExercise(id) {
+            appData[todayStr].exercises = appData[todayStr].exercises.filter(ex => ex.id !== id);
+            appData[todayStr].score = calculateScore();
+            saveData();
+        }
+
+        function copyWorkoutFromPast() {
+            const selectedDate = document.getElementById('pastDatesSelect').value;
+            if (!selectedDate || !appData[selectedDate] || !appData[selectedDate].exercises) return;
+
+            const exercisesToCopy = appData[selectedDate].exercises.map(ex => ({
+                id: Date.now() + Math.random(),
+                name: ex.name,
+                sets: ex.sets,
+                reps: ex.reps,
+                weight: ex.weight
+            }));
+
+            appData[todayStr].exercises = [...appData[todayStr].exercises, ...exercisesToCopy];
+            appData[todayStr].score = calculateScore();
+            saveData();
+        }
+
+        function populatePastDatesDropdown() {
+            const selectEl = document.getElementById('pastDatesSelect');
+            selectEl.innerHTML = '<option value="">-- Pilih Rekod Sesi Lepas --</option>';
+
+            const sortedDates = Object.keys(appData).sort().reverse();
+            sortedDates.forEach(date => {
+                if (date !== todayStr && appData[date].exercises && appData[date].exercises.length > 0) {
+                    const option = document.createElement('option');
+                    option.value = date;
+                    option.innerText = `${date} (${appData[date].exercises.length} senaman)`;
+                    selectEl.appendChild(option);
+                }
+            });
+        }
+
+        function renderDashboard() {
+            const now = new Date();
+            const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            
+            let totalSessions = 0;
+            let totalVolume = 0;
+            let totalScore = 0;
+            let latestWeight = 49.0;
+            let weightHistory = [];
+
+            const sortedDates = Object.keys(appData).sort();
+
+            sortedDates.forEach(date => {
+                const day = appData[date];
+                if (day.weight) {
+                    latestWeight = day.weight;
+                    weightHistory.push({ date, weight: day.weight });
+                }
+
+                if (date.startsWith(currentYearMonth)) {
+                    if (day.exercises && day.exercises.length > 0) {
+                        totalSessions++;
+                        day.exercises.forEach(ex => {
+                            totalVolume += (ex.sets * ex.reps * ex.weight);
+                        });
+                        totalScore += (day.score || calculateScore(date));
+                    }
+                }
+            });
+
+            // BMI Calculations (Height: 1.68m)
+            const heightM = 1.68;
+            const currentBMI = (latestWeight / (heightM * heightM)).toFixed(1);
+            const targetWeightForIdealBMI = (18.5 * (heightM * heightM)).toFixed(1); // ~52.2 kg
+            const weightGap = (targetWeightForIdealBMI - latestWeight).toFixed(1);
+
+            document.getElementById('dashBMI').innerText = `BMI: ${currentBMI}`;
+            document.getElementById('dashWeightGap').innerText = weightGap > 0 ? `${weightGap} kg lagi` : `Pencapaian Dicapai! 🎉`;
+
+            // Progress bar
+            const startWeight = 49.0;
+            const totalToGain = targetWeightForIdealBMI - startWeight;
+            const gainedSoFar = latestWeight - startWeight;
+            const progressPercent = Math.max(5, Math.min(100, (gainedSoFar / (totalToGain || 1)) * 100));
+            document.getElementById('bmiProgressBar').style.width = `${progressPercent}%`;
+
+            document.getElementById('dashSessions').innerText = `${totalSessions} Sesi`;
+            document.getElementById('dashVolume').innerText = totalVolume >= 1000 ? `${(totalVolume/1000).toFixed(1)}t` : `${totalVolume} Kg`;
+            document.getElementById('dashAvgScore').innerText = totalSessions > 0 ? `${Math.round(totalScore / totalSessions)} PTS` : `0 PTS`;
+            document.getElementById('dashLatestWeight').innerText = `${latestWeight} Kg`;
+
+            renderLineChart(weightHistory.slice(-7));
+        }
+
+        function renderLineChart(data) {
+            const container = document.getElementById('weightChartContainer');
+            if (data.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-500 italic">Tiada data berat disimpan</p>`;
+                return;
+            }
+
+            const width = 300;
+            const height = 100;
+            const padding = 20;
+
+            const weights = data.map(d => d.weight);
+            let minW = Math.min(...weights);
+            let maxW = Math.max(...weights);
+            if (minW === maxW) { minW -= 1; maxW += 1; }
+
+            const points = data.map((d, i) => {
+                const x = padding + (i * ((width - 2 * padding) / (data.length > 1 ? data.length - 1 : 1)));
+                const y = height - padding - ((d.weight - minW) / (maxW - minW)) * (height - 2 * padding);
+                return { x, y, weight: d.weight, date: d.date.split('-')[2] };
+            });
+
+            const pointsString = points.map(p => `${p.x},${p.y}`).join(' ');
+
+            let svgHTML = `
+                <svg viewBox="0 0 ${width} ${height}" class="w-full h-full overflow-visible">
+                    <polyline fill="none" stroke="#a855f7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${pointsString}" />
+            `;
+
+            points.forEach(p => {
+                svgHTML += `
+                    <circle cx="${p.x}" cy="${p.y}" r="4" fill="#a855f7" stroke="#1f2937" stroke-width="2" />
+                    <text x="${p.x}" y="${p.y - 8}" fill="#e9d5ff" font-size="8" text-anchor="middle" font-weight="bold">${p.weight}</text>
+                    <text x="${p.x}" y="${height - 2}" fill="#9ca3af" font-size="7" text-anchor="middle">${p.date}/m</text>
+                `;
+            });
+
+            svgHTML += `</svg>`;
+            container.innerHTML = svgHTML;
+        }
+
+        function renderAll() {
+            const currentScore = calculateScore();
+            document.getElementById('fitnessScoreDisplay').innerText = `${currentScore} PTS`;
+
+            if (appData[todayStr].weight) {
+                document.getElementById('bodyWeightInput').value = appData[todayStr].weight;
+            }
+
+            const listEl = document.getElementById('exerciseList');
+            const exercises = appData[todayStr].exercises || [];
+
+            if (exercises.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-gray-500 italic text-center py-2">Belum ada senaman ditambah hari ini.</p>`;
+            } else {
+                listEl.innerHTML = exercises.map(ex => `
+                    <div class="flex justify-between items-center bg-gray-700/50 p-2.5 rounded-lg text-xs">
+                        <div>
+                            <div class="font-bold text-white">${ex.name}</div>
+                            <div class="text-gray-400">${ex.sets} Set × ${ex.reps} Reps @ <span class="text-emerald-400 font-semibold">${ex.weight} kg</span></div>
+                        </div>
+                        <button onclick="removeExercise(${ex.id})" class="text-red-400 hover:text-red-300 font-bold px-2 py-1">Hapus</button>
+                    </div>
+                `).join('');
+            }
+
+            populatePastDatesDropdown();
+            renderDashboard();
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+
+            const monthNames = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", "Julai", "Ogos", "September", "Oktober", "November", "Disember"];
+            document.getElementById('currentMonthYear').innerText = `${monthNames[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                grid.innerHTML += `<div></div>`;
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const hasWorkedOut = appData[dateKey] && appData[dateKey].exercises && appData[dateKey].exercises.length > 0;
+                const isToday = dateKey === todayStr;
+
+                let bgClass = "bg-gray-700/40 text-gray-400";
+                if (hasWorkedOut) bgClass = "bg-emerald-500 text-white font-bold";
+                if (isToday) bgClass += " border-2 border-amber-400";
+
+                grid.innerHTML += `
+                    <div class="h-9 flex items-center justify-center rounded-lg ${bgClass} text-xs">
+                        ${day}
+                    </div>
+                `;
+            }
+        }
+
+        renderAll();
+    </script>
+</body>
+</html>
