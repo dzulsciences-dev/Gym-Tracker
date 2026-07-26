@@ -9,7 +9,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        /* Style untuk checkbox custom */
         input[type="checkbox"] { accent-color: #10b981; }
     </style>
 </head>
@@ -31,41 +30,65 @@
 
         <!-- DASHBOARD RINGKASAN PRESTASI & MATLAMAT BMI -->
         <div class="space-y-3">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400">📊 Dashboard Bulanan & Status BMI</h2>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400">🏆 Prestasi & Pencapaian Bulanan</h2>
             
             <div class="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 p-4 rounded-xl border border-purple-700/50">
                 <div class="flex justify-between items-center mb-2">
                     <div>
                         <span class="text-[10px] text-purple-300 font-bold uppercase tracking-wider">Sasaran Berat (Tinggi: 168cm)</span>
-                        <div class="text-lg font-extrabold text-white"><span id="dashBMI">--</span> <span class="text-xs font-normal text-purple-200">(BMI Ideal Target: 18.5)</span></div>
+                        <div class="text-lg font-extrabold text-white"><span id="dashBMI">--</span> <span class="text-xs font-normal text-purple-200">(BMI Ideal: 18.5)</span></div>
                     </div>
                     <div class="text-right">
                         <span class="text-[10px] text-purple-300 font-bold uppercase">Baki ke Target</span>
                         <div class="text-base font-black text-emerald-400" id="dashWeightGap">-- kg lagi</div>
                     </div>
                 </div>
-                <div class="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
-                    <div id="bmiProgressBar" class="bg-emerald-400 h-full transition-all duration-500" style="width: 0%"></div>
+                <div class="w-full bg-gray-700 h-2 rounded-full overflow-hidden relative">
+                    <div id="bmiProgressBar" class="bg-emerald-400 h-full transition-all duration-500 shadow-[0_0_10px_#10b981]" style="width: 0%"></div>
                 </div>
             </div>
 
+            <!-- 4 Metrics Grid Bergambar (Gamification) -->
             <div class="grid grid-cols-2 gap-3">
-                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
-                    <p class="text-[11px] text-gray-400">Sesi Workout</p>
+                
+                <!-- 1: Sesi -->
+                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700 flex flex-col justify-center">
+                    <p class="text-[11px] text-gray-400">Kehadiran Gym</p>
                     <p class="text-xl font-black text-emerald-400" id="dashSessions">0 Hari</p>
                 </div>
+
+                <!-- 2: Peratusan Berat -->
                 <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
-                    <p class="text-[11px] text-gray-400">Jumlah Volum</p>
+                    <div class="flex justify-between items-start">
+                        <p class="text-[11px] text-gray-400">Berat Terkini</p>
+                        <div id="weightChangeBadge">--</div>
+                    </div>
+                    <p class="text-xl font-black text-purple-400 mt-0.5" id="dashLatestWeight">49.0 Kg</p>
+                </div>
+
+                <!-- 3: Volum Bulanan & Target -->
+                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
+                    <p class="text-[11px] text-gray-400">Volum Bulanan</p>
                     <p class="text-xl font-black text-blue-400" id="dashVolume">0 Kg</p>
+                    <div class="w-full bg-gray-900 h-1.5 mt-1.5 rounded-full overflow-hidden">
+                        <div id="volProgressBar" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p class="text-[9px] text-gray-500 mt-1 flex justify-between"><span>Misi: 10,000 Kg</span> <span id="volPercentText">0%</span></p>
                 </div>
+                
+                <!-- 4: Pangkat PTS Bulanan -->
                 <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
-                    <p class="text-[11px] text-gray-400">Purata Skor (PTS)</p>
-                    <p class="text-xl font-black text-amber-400" id="dashAvgScore">0 PTS</p>
+                    <p class="text-[11px] text-gray-400">Skor Terkumpul (PTS)</p>
+                    <p class="text-xl font-black text-amber-400 flex items-baseline gap-1">
+                        <span id="dashTotalScore">0</span> <span class="text-[10px] text-gray-500">PTS</span>
+                    </p>
+                    <p id="ptsRankName" class="text-[10px] font-bold mt-1 text-gray-300">Level: Novice</p>
+                    <div class="w-full bg-gray-900 h-1.5 mt-1 rounded-full overflow-hidden">
+                        <div id="ptsProgressBar" class="bg-amber-500 h-full transition-all duration-500 shadow-[0_0_8px_#f59e0b]" style="width: 0%"></div>
+                    </div>
+                    <p id="ptsNextRank" class="text-[9px] text-gray-500 mt-1">Lagi 0 PTS ke level seterus</p>
                 </div>
-                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
-                    <p class="text-[11px] text-gray-400">Berat Terkini</p>
-                    <p class="text-xl font-black text-purple-400" id="dashLatestWeight">49.0 Kg</p>
-                </div>
+
             </div>
         </div>
 
@@ -92,14 +115,13 @@
                 </select>
             </div>
             
-            <!-- Kontena Senarai Senaman Lepas untuk Dipilih -->
             <div id="pastExercisesContainer" class="hidden mt-3 bg-gray-900 rounded-lg p-3 border border-gray-600 space-y-2">
                 <div class="flex items-center gap-2 border-b border-gray-700 pb-2 mb-2">
                     <input type="checkbox" id="selectAllPast" onchange="toggleSelectAllPast(this)" class="w-4 h-4">
                     <label for="selectAllPast" class="text-xs font-bold text-emerald-400">Pilih Semua Senaman</label>
                 </div>
                 <div id="pastExercisesList" class="space-y-2 max-h-48 overflow-y-auto">
-                    <!-- Senarai checkbox akan dirender di sini -->
+                    <!-- Senarai checkbox render di sini -->
                 </div>
                 <button onclick="copySelectedPast()" class="w-full mt-2 bg-purple-600 py-2 rounded-lg text-sm font-bold hover:bg-purple-500 transition">Copy Senaman Terpilih 📥</button>
             </div>
@@ -128,7 +150,7 @@
             <button onclick="addExercise()" class="w-full bg-blue-600 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-500 transition">+ Tambah Senaman Baru</button>
         </div>
 
-        <!-- 4: SENARAI WORKOUT HARI INI (BOLEH TICK & EDIT) -->
+        <!-- 4: SENARAI WORKOUT HARI INI -->
         <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
             <h2 class="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
                 ✅ Sesi Workout Hari Ini
@@ -145,8 +167,7 @@
         let appData = JSON.parse(localStorage.getItem('gymAppData')) || {};
 
         if (!appData[todayStr]) {
-            // Kita kekalkan structure data untuk hari ini
-            appData[todayStr] = { weight: 49.0, exercises: [], score: 0 };
+            appData[todayStr] = { weight: null, exercises: [], score: 0 };
         }
 
         function saveData() {
@@ -175,8 +196,6 @@
             }
         }
 
-        // --- FUNGSI TAMBAH / BUANG / EDIT HARI INI ---
-
         function addExercise() {
             const name = document.getElementById('exerciseName').value;
             const sets = parseInt(document.getElementById('setsInput').value);
@@ -184,7 +203,6 @@
             const weight = parseFloat(document.getElementById('weightInput').value);
 
             if (name && sets && reps && !isNaN(weight)) {
-                // completed: false (untuk fitur tick kotak siap)
                 appData[todayStr].exercises.push({ id: Date.now(), name, sets, reps, weight, completed: false });
                 appData[todayStr].score = calculateScore();
                 saveData();
@@ -203,7 +221,7 @@
             const ex = appData[todayStr].exercises.find(e => e.id === id);
             if (ex) {
                 ex.completed = isChecked;
-                saveData(); // Save status update
+                saveData(); 
             }
         }
 
@@ -211,12 +229,10 @@
             const ex = appData[todayStr].exercises.find(e => e.id === id);
             if (ex) {
                 ex[field] = parseFloat(value) || 0;
-                appData[todayStr].score = calculateScore(); // Recalculate score bila ada perubahan
+                appData[todayStr].score = calculateScore(); 
                 saveData();
             }
         }
-
-        // --- FUNGSI COPY HARI LEPAS (CIRI BARU) ---
 
         function populatePastDatesDropdown() {
             const selectEl = document.getElementById('pastDatesSelect');
@@ -274,12 +290,12 @@
                 
                 if(originalEx) {
                     appData[todayStr].exercises.push({
-                        id: Date.now() + Math.random(), // ID unik baru
+                        id: Date.now() + Math.random(), 
                         name: originalEx.name,
                         sets: originalEx.sets,
                         reps: originalEx.reps,
                         weight: originalEx.weight,
-                        completed: false // Masuk hari ni secara default belum siap
+                        completed: false 
                     });
                 }
             });
@@ -287,13 +303,12 @@
             appData[todayStr].score = calculateScore();
             saveData();
             
-            // Tutup dan reset UI salinan
             document.getElementById('pastDatesSelect').value = '';
             document.getElementById('pastExercisesContainer').classList.add('hidden');
         }
 
 
-        // --- RENDER DASHBOARD & LAIN-LAIN ---
+        // --- LOGIK DASHBOARD & GAMIFICATION ---
 
         function renderDashboard() {
             const now = new Date();
@@ -301,8 +316,8 @@
             
             let totalSessions = 0;
             let totalVolume = 0;
-            let totalScore = 0;
-            let latestWeight = 49.0;
+            let totalMonthlyScore = 0; 
+            
             let weightHistory = [];
 
             const sortedDates = Object.keys(appData).sort();
@@ -310,7 +325,6 @@
             sortedDates.forEach(date => {
                 const day = appData[date];
                 if (day.weight) {
-                    latestWeight = day.weight;
                     weightHistory.push({ date, weight: day.weight });
                 }
 
@@ -320,11 +334,37 @@
                         day.exercises.forEach(ex => {
                             totalVolume += (ex.sets * ex.reps * ex.weight);
                         });
-                        totalScore += (day.score || calculateScore(date));
+                        totalMonthlyScore += (day.score || calculateScore(date));
                     }
                 }
             });
 
+            // 1. Logik Berat & Peratusan Naik/Turun
+            let latestWeight = 49.0;
+            let previousWeight = 49.0;
+            let weightBadgeHTML = `<span class="text-[10px] text-gray-500 bg-gray-700 px-1.5 py-0.5 rounded">Asas</span>`;
+
+            if (weightHistory.length > 0) {
+                latestWeight = weightHistory[weightHistory.length - 1].weight;
+                if (weightHistory.length > 1) {
+                    previousWeight = weightHistory[weightHistory.length - 2].weight;
+                    let diff = latestWeight - previousWeight;
+                    let percent = (diff / previousWeight) * 100;
+
+                    if (diff > 0) {
+                        weightBadgeHTML = `<span class="text-[10px] text-emerald-900 bg-emerald-400 px-1.5 py-0.5 rounded font-bold">▲ +${percent.toFixed(1)}%</span>`;
+                    } else if (diff < 0) {
+                        weightBadgeHTML = `<span class="text-[10px] text-red-900 bg-red-400 px-1.5 py-0.5 rounded font-bold">▼ ${percent.toFixed(1)}%</span>`;
+                    } else {
+                        weightBadgeHTML = `<span class="text-[10px] text-gray-400 bg-gray-700 px-1.5 py-0.5 rounded">Kekal</span>`;
+                    }
+                }
+            }
+
+            document.getElementById('weightChangeBadge').innerHTML = weightBadgeHTML;
+            document.getElementById('dashLatestWeight').innerText = `${latestWeight} Kg`;
+
+            // Logik BMI
             const heightM = 1.68;
             const currentBMI = (latestWeight / (heightM * heightM)).toFixed(1);
             const targetWeightForIdealBMI = (18.5 * (heightM * heightM)).toFixed(1);
@@ -339,10 +379,43 @@
             const progressPercent = Math.max(5, Math.min(100, (gainedSoFar / (totalToGain || 1)) * 100));
             document.getElementById('bmiProgressBar').style.width = `${progressPercent}%`;
 
-            document.getElementById('dashSessions').innerText = `${totalSessions} Sesi`;
+            // 2. Logik Pencapaian Volume (Target: 10,000 kg sebulan)
+            const targetVolume = 10000;
+            const volPercent = Math.min(100, (totalVolume / targetVolume) * 100);
             document.getElementById('dashVolume').innerText = totalVolume >= 1000 ? `${(totalVolume/1000).toFixed(1)}t` : `${totalVolume} Kg`;
-            document.getElementById('dashAvgScore').innerText = totalSessions > 0 ? `${Math.round(totalScore / totalSessions)} PTS` : `0 PTS`;
-            document.getElementById('dashLatestWeight').innerText = `${latestWeight} Kg`;
+            document.getElementById('volProgressBar').style.width = `${volPercent}%`;
+            document.getElementById('volPercentText').innerText = `${Math.floor(volPercent)}%`;
+
+            // 3. Logik Sistem Rank (PTS)
+            let rankName = "Novice";
+            let nextRankTarget = 500;
+            
+            if (totalMonthlyScore >= 3000) { rankName = "Elite Lifter 👑"; nextRankTarget = 3000; }
+            else if (totalMonthlyScore >= 1500) { rankName = "Advanced 🔥"; nextRankTarget = 3000; }
+            else if (totalMonthlyScore >= 500) { rankName = "Intermediate ⚡"; nextRankTarget = 1500; }
+
+            let ptsProgress = 100;
+            let ptsRemaining = 0;
+            
+            if (totalMonthlyScore < 3000) {
+                // Formula utk bar (contoh Intermediate 500 -> 1500, range = 1000)
+                let prevRankCap = nextRankTarget === 500 ? 0 : (nextRankTarget === 1500 ? 500 : 1500);
+                let range = nextRankTarget - prevRankCap;
+                let currentProg = totalMonthlyScore - prevRankCap;
+                ptsProgress = (currentProg / range) * 100;
+                ptsRemaining = nextRankTarget - totalMonthlyScore;
+            }
+
+            document.getElementById('dashSessions').innerText = `${totalSessions} Sesi`;
+            document.getElementById('dashTotalScore').innerText = totalMonthlyScore;
+            document.getElementById('ptsRankName').innerText = `Level: ${rankName}`;
+            document.getElementById('ptsProgressBar').style.width = `${Math.max(5, ptsProgress)}%`;
+            
+            if (totalMonthlyScore >= 3000) {
+                document.getElementById('ptsNextRank').innerText = `Anda di tahap tertinggi!`;
+            } else {
+                document.getElementById('ptsNextRank').innerText = `Lagi ${ptsRemaining} PTS ke level seterus`;
+            }
         }
 
         function renderAll() {
@@ -360,19 +433,17 @@
                 listEl.innerHTML = `<p class="text-xs text-gray-500 italic text-center py-2">Belum ada senaman ditambah hari ini.</p>`;
             } else {
                 listEl.innerHTML = exercises.map(ex => `
-                    <div class="bg-gray-700/50 p-3 rounded-lg flex flex-col gap-2 border border-gray-600/50 ${ex.completed ? 'opacity-60 bg-emerald-900/20' : ''}">
+                    <div class="bg-gray-700/50 p-3 rounded-lg flex flex-col gap-2 border border-gray-600/50 transition-all ${ex.completed ? 'opacity-50 bg-emerald-900/10 border-emerald-900/50' : ''}">
                         
-                        <!-- Header Senaman & Tick Siap -->
                         <div class="flex justify-between items-center">
-                            <label class="flex items-center gap-2 cursor-pointer w-full">
-                                <input type="checkbox" onchange="toggleComplete(${ex.id}, this.checked)" class="w-5 h-5 rounded" ${ex.completed ? 'checked' : ''}>
-                                <span class="font-bold text-sm ${ex.completed ? 'line-through text-gray-400' : 'text-white'}">${ex.name}</span>
+                            <label class="flex items-center gap-3 cursor-pointer w-full">
+                                <input type="checkbox" onchange="toggleComplete(${ex.id}, this.checked)" class="w-5 h-5 rounded border-gray-500" ${ex.completed ? 'checked' : ''}>
+                                <span class="font-bold text-sm transition-all ${ex.completed ? 'line-through text-gray-500' : 'text-white'}">${ex.name}</span>
                             </label>
                             <button onclick="removeExercise(${ex.id})" class="text-red-400 hover:text-red-300 font-bold px-2 py-1 text-xs">Buang</button>
                         </div>
                         
-                        <!-- Input Edit Live -->
-                        <div class="flex gap-2 items-center text-[11px] text-gray-400 mt-1 pl-7">
+                        <div class="flex gap-2 items-center text-[11px] text-gray-400 mt-1 pl-8">
                             <div class="flex items-center gap-1">
                                 Set: <input type="number" value="${ex.sets}" onchange="updateEx(${ex.id}, 'sets', this.value)" class="w-10 bg-gray-800 text-white text-center rounded border border-gray-600 py-1 focus:border-emerald-500">
                             </div>
