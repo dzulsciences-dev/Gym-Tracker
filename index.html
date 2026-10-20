@@ -1,468 +1,349 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Gym Performance Tracker</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        input[type="checkbox"] { accent-color: #10b981; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>GymTracker Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root { color-scheme: dark; }
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:#080e19; }
+    input, select, button { font: inherit; }
+    input[type=checkbox] { accent-color:#34d399; width:18px; height:18px; flex-shrink:0; }
+    .panel { background:linear-gradient(145deg,rgba(22,33,52,.96),rgba(14,22,37,.96)); border:1px solid rgba(148,163,184,.14); border-radius:20px; }
+    .field { width:100%; min-width:0; background:#0b1423; border:1px solid #29364a; border-radius:12px; padding:11px 12px; color:#f8fafc; outline:none; }
+    .field:focus { border-color:#34d399; box-shadow:0 0 0 3px rgba(52,211,153,.12); }
+    .btn { border-radius:12px; padding:11px 14px; font-weight:700; transition:transform .15s,opacity .15s; }
+    .btn:active { transform:scale(.98); }
+    .muted { color:#94a3b8; }
+    .metric { background:rgba(15,23,42,.7); border:1px solid rgba(148,163,184,.12); border-radius:16px; padding:14px; min-width:0; }
+    .chart-wrap { position:relative; height:230px; }
+    .safe-bottom { padding-bottom:calc(24px + env(safe-area-inset-bottom)); }
+  </style>
 </head>
-<body class="bg-gray-900 text-white pb-12">
-
-    <!-- Header -->
-    <div class="p-5 bg-gray-800 border-b border-gray-700 sticky top-0 z-50 flex justify-between items-center">
-        <div>
-            <h1 class="text-xl font-bold text-emerald-400">GymTracker PRO</h1>
-            <p class="text-xs text-gray-400">Target: Weight Gain (Bulk)</p>
-        </div>
-        <div id="todayScore" class="text-right">
-            <span class="text-xs text-gray-400">Skor Hari Ini</span>
-            <div class="text-lg font-black text-amber-400" id="fitnessScoreDisplay">0 PTS</div>
-        </div>
+<body class="text-slate-100 min-h-screen safe-bottom">
+<header class="sticky top-0 z-30 border-b border-white/10 backdrop-blur-xl" style="background:rgba(8,14,25,.9)">
+  <div class="max-w-3xl mx-auto px-4 py-4 flex justify-between items-center gap-3">
+    <div>
+      <div class="flex items-center gap-2"><span class="text-2xl">🏋️</span><h1 class="text-lg sm:text-xl font-black tracking-tight">GymTracker <span class="text-emerald-400">PRO</span></h1></div>
+      <p class="text-xs muted mt-1">Bina kekuatan, satu sesi pada satu masa</p>
     </div>
+    <div class="text-right shrink-0"><p class="text-[10px] uppercase tracking-widest muted">Skor hari ini</p><p id="todayScore" class="text-xl font-black text-amber-300">0 PTS</p></div>
+  </div>
+</header>
 
-    <div class="p-4 space-y-6 max-w-md mx-auto">
-
-        <!-- DASHBOARD RINGKASAN PRESTASI & MATLAMAT BMI -->
-        <div class="space-y-3">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400">🏆 Prestasi & Pencapaian Bulanan</h2>
-            
-            <div class="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 p-4 rounded-xl border border-purple-700/50">
-                <div class="flex justify-between items-center mb-2">
-                    <div>
-                        <span class="text-[10px] text-purple-300 font-bold uppercase tracking-wider">Sasaran Berat (Tinggi: 168cm)</span>
-                        <div class="text-lg font-extrabold text-white"><span id="dashBMI">--</span> <span class="text-xs font-normal text-purple-200">(BMI Ideal: 18.5)</span></div>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-[10px] text-purple-300 font-bold uppercase">Baki ke Target</span>
-                        <div class="text-base font-black text-emerald-400" id="dashWeightGap">-- kg lagi</div>
-                    </div>
-                </div>
-                <div class="w-full bg-gray-700 h-2 rounded-full overflow-hidden relative">
-                    <div id="bmiProgressBar" class="bg-emerald-400 h-full transition-all duration-500 shadow-[0_0_10px_#10b981]" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- 4 Metrics Grid Bergambar (Gamification) -->
-            <div class="grid grid-cols-2 gap-3">
-                
-                <!-- 1: Sesi -->
-                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700 flex flex-col justify-center">
-                    <p class="text-[11px] text-gray-400">Kehadiran Gym</p>
-                    <p class="text-xl font-black text-emerald-400" id="dashSessions">0 Hari</p>
-                </div>
-
-                <!-- 2: Peratusan Berat -->
-                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
-                    <div class="flex justify-between items-start">
-                        <p class="text-[11px] text-gray-400">Berat Terkini</p>
-                        <div id="weightChangeBadge">--</div>
-                    </div>
-                    <p class="text-xl font-black text-purple-400 mt-0.5" id="dashLatestWeight">49.0 Kg</p>
-                </div>
-
-                <!-- 3: Volum Bulanan & Target -->
-                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
-                    <p class="text-[11px] text-gray-400">Volum Bulanan</p>
-                    <p class="text-xl font-black text-blue-400" id="dashVolume">0 Kg</p>
-                    <div class="w-full bg-gray-900 h-1.5 mt-1.5 rounded-full overflow-hidden">
-                        <div id="volProgressBar" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                    <p class="text-[9px] text-gray-500 mt-1 flex justify-between"><span>Misi: 10,000 Kg</span> <span id="volPercentText">0%</span></p>
-                </div>
-                
-                <!-- 4: Pangkat PTS Bulanan -->
-                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
-                    <p class="text-[11px] text-gray-400">Skor Terkumpul (PTS)</p>
-                    <p class="text-xl font-black text-amber-400 flex items-baseline gap-1">
-                        <span id="dashTotalScore">0</span> <span class="text-[10px] text-gray-500">PTS</span>
-                    </p>
-                    <p id="ptsRankName" class="text-[10px] font-bold mt-1 text-gray-300">Level: Novice</p>
-                    <div class="w-full bg-gray-900 h-1.5 mt-1 rounded-full overflow-hidden">
-                        <div id="ptsProgressBar" class="bg-amber-500 h-full transition-all duration-500 shadow-[0_0_8px_#f59e0b]" style="width: 0%"></div>
-                    </div>
-                    <p id="ptsNextRank" class="text-[9px] text-gray-500 mt-1">Lagi 0 PTS ke level seterus</p>
-                </div>
-
-            </div>
-        </div>
-
-        <hr class="border-gray-800">
-
-        <!-- 1: REKOD BERAT BADAN HARI INI -->
-        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-            <h2 class="text-sm font-semibold text-gray-300 mb-2">⚖️ Berat Badan Hari Ini (Kg)</h2>
-            <div class="flex gap-2">
-                <input type="number" id="bodyWeightInput" step="0.1" placeholder="Contoh: 49.5" class="bg-gray-700 text-white px-3 py-2 rounded-lg w-full text-sm border border-gray-600 focus:outline-none focus:border-emerald-500">
-                <button onclick="saveBodyWeight()" class="bg-emerald-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-500 transition">Simpan</button>
-            </div>
-            <p id="weightStatus" class="text-xs text-emerald-400 mt-2 hidden">✓ Berat disimpan!</p>
-        </div>
-
-        <!-- 2: COPY WORKOUT DARI HARI LEPAS -->
-        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 space-y-2">
-            <h2 class="text-sm font-semibold text-gray-300 flex justify-between items-center">
-                <span>📋 Pilih Senaman Hari Lepas</span>
-            </h2>
-            <div class="flex gap-2">
-                <select id="pastDatesSelect" onchange="showPastExercises(this.value)" class="bg-gray-700 text-white px-3 py-2 rounded-lg w-full text-sm border border-gray-600 focus:outline-none focus:border-emerald-500">
-                    <option value="">-- Pilih Tarikh Rekod Sesi Lepas --</option>
-                </select>
-            </div>
-            
-            <div id="pastExercisesContainer" class="hidden mt-3 bg-gray-900 rounded-lg p-3 border border-gray-600 space-y-2">
-                <div class="flex items-center gap-2 border-b border-gray-700 pb-2 mb-2">
-                    <input type="checkbox" id="selectAllPast" onchange="toggleSelectAllPast(this)" class="w-4 h-4">
-                    <label for="selectAllPast" class="text-xs font-bold text-emerald-400">Pilih Semua Senaman</label>
-                </div>
-                <div id="pastExercisesList" class="space-y-2 max-h-48 overflow-y-auto">
-                    <!-- Senarai checkbox render di sini -->
-                </div>
-                <button onclick="copySelectedPast()" class="w-full mt-2 bg-purple-600 py-2 rounded-lg text-sm font-bold hover:bg-purple-500 transition">Copy Senaman Terpilih 📥</button>
-            </div>
-        </div>
-
-        <!-- 3: TAMBAH WORKOUT BARU (MANUAL) -->
-        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 space-y-3">
-            <h2 class="text-sm font-semibold text-gray-300">🏋️ Tambah Senaman Manual</h2>
-            <div>
-                <input type="text" id="exerciseName" placeholder="Nama Senaman (cth: Dumbbell Press)" class="bg-gray-700 text-white px-3 py-2 rounded-lg w-full text-sm border border-gray-600 focus:outline-none focus:border-emerald-500 mb-2">
-                <div class="grid grid-cols-3 gap-2">
-                    <div>
-                        <label class="text-[10px] text-gray-400">Set</label>
-                        <input type="number" id="setsInput" value="3" class="bg-gray-700 text-white px-2 py-1.5 rounded-lg w-full text-sm border border-gray-600">
-                    </div>
-                    <div>
-                        <label class="text-[10px] text-gray-400">Reps / Set</label>
-                        <input type="number" id="repsInput" placeholder="10" class="bg-gray-700 text-white px-2 py-1.5 rounded-lg w-full text-sm border border-gray-600">
-                    </div>
-                    <div>
-                        <label class="text-[10px] text-gray-400">Beban (Kg)</label>
-                        <input type="number" id="weightInput" placeholder="10" class="bg-gray-700 text-white px-2 py-1.5 rounded-lg w-full text-sm border border-gray-600">
-                    </div>
-                </div>
-            </div>
-            <button onclick="addExercise()" class="w-full bg-blue-600 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-500 transition">+ Tambah Senaman Baru</button>
-        </div>
-
-        <!-- 4: SENARAI WORKOUT HARI INI -->
-        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
-            <h2 class="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-                ✅ Sesi Workout Hari Ini
-            </h2>
-            <div id="exerciseList" class="space-y-3">
-                <p class="text-xs text-gray-500 italic text-center py-2">Belum ada senaman ditambah hari ini.</p>
-            </div>
-        </div>
-
+<main class="max-w-3xl mx-auto px-4 py-5 space-y-5">
+  <section class="panel p-4 sm:p-5">
+    <div class="flex justify-between items-start gap-3 mb-4">
+      <div><p class="text-xs font-bold uppercase tracking-widest text-emerald-300">Dashboard</p><h2 class="text-xl font-extrabold mt-1">Kemajuan awak</h2></div>
+      <span id="monthLabel" class="text-xs muted bg-slate-800 px-3 py-2 rounded-full"></span>
     </div>
+    <div class="rounded-2xl p-4 mb-3 border border-emerald-400/20" style="background:linear-gradient(120deg,rgba(16,185,129,.13),rgba(59,130,246,.08))">
+      <div class="flex justify-between gap-3 items-center">
+        <div><p class="text-xs muted">Berat terkini</p><p id="latestWeight" class="text-2xl font-black mt-1">49.0 kg</p><p id="weightTrend" class="text-xs muted mt-1">Rekod berat untuk lihat trend</p></div>
+        <div class="text-right"><p class="text-xs muted">Sasaran BMI 18.5</p><p id="targetWeight" class="text-lg font-bold text-emerald-300">52.2 kg</p><p id="weightGap" class="text-xs muted">3.2 kg lagi</p></div>
+      </div>
+      <div class="h-2 rounded-full bg-slate-800 mt-4 overflow-hidden"><div id="weightProgress" class="h-full rounded-full bg-emerald-400 transition-all" style="width:0%"></div></div>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="metric"><p class="text-xs muted">Sesi bulan ini</p><p id="sessions" class="text-xl font-black text-emerald-300 mt-1">0</p></div>
+      <div class="metric"><p class="text-xs muted">Volum bulan ini</p><p id="volume" class="text-xl font-black text-sky-300 mt-1">0 kg</p><p id="volumePct" class="text-[10px] muted mt-1">0% daripada sasaran</p></div>
+      <div class="metric"><p class="text-xs muted">PTS bulan ini</p><p id="monthlyPts" class="text-xl font-black text-amber-300 mt-1">0</p><p id="rank" class="text-[10px] muted mt-1">Novice</p></div>
+      <div class="metric"><p class="text-xs muted">BMI anggaran</p><p id="bmi" class="text-xl font-black text-violet-300 mt-1">17.4</p><p class="text-[10px] muted mt-1">Tinggi 168 cm</p></div>
+    </div>
+  </section>
 
-    <script>
-        const todayStr = new Date().toISOString().split('T')[0];
-        let appData = JSON.parse(localStorage.getItem('gymAppData')) || {};
+  <section class="grid sm:grid-cols-2 gap-5">
+    <div class="panel p-4">
+      <div class="mb-3"><h3 class="font-bold">⚖️ Graf berat badan</h3><p class="text-xs muted mt-1">Rekod mengikut tarikh</p></div>
+      <div class="chart-wrap"><canvas id="weightChart" aria-label="Graf berat badan"></canvas></div>
+    </div>
+    <div class="panel p-4">
+      <div class="mb-3"><h3 class="font-bold">📈 Graf progres latihan</h3><p class="text-xs muted mt-1">Volum latihan setiap sesi (set × reps × kg)</p></div>
+      <div class="chart-wrap"><canvas id="progressChart" aria-label="Graf progres latihan"></canvas></div>
+    </div>
+  </section>
 
-        if (!appData[todayStr]) {
-            appData[todayStr] = { weight: null, exercises: [], score: 0 };
-        }
+  <section class="panel p-4 sm:p-5">
+    <h2 class="font-bold text-lg">⚖️ Rekod berat</h2>
+    <p class="text-xs muted mt-1 mb-3">Masukkan berat yang diukur hari ini.</p>
+    <div class="flex gap-2"><input class="field" type="number" id="bodyWeight" min="1" max="500" step=".1" placeholder="Contoh: 49.5 kg" inputmode="decimal"><button class="btn bg-emerald-500 text-slate-950 shrink-0" onclick="saveBodyWeight()">Simpan</button></div>
+    <p id="weightMessage" class="text-xs text-emerald-300 mt-2 hidden" role="status">Berat berjaya disimpan.</p>
+  </section>
 
-        function saveData() {
-            localStorage.setItem('gymAppData', JSON.stringify(appData));
-            renderAll();
-        }
+  <section class="panel p-4 sm:p-5">
+    <h2 class="font-bold text-lg">📋 Salin workout terdahulu</h2>
+    <p class="text-xs muted mt-1 mb-3">Pilih mana-mana tarikh yang mempunyai rekod. Senaman akan disalin ke hari ini tanpa menjejaskan rekod asal.</p>
+    <select id="pastDate" class="field mb-3"><option value="">Pilih tarikh rekod</option></select>
+    <div id="pastWrap" class="hidden rounded-xl border border-slate-700 bg-slate-950/50 p-3">
+      <label class="flex items-center gap-2 text-sm font-semibold text-emerald-300 mb-3"><input type="checkbox" id="selectAll"> Pilih semua senaman</label>
+      <div id="pastList" class="space-y-2 max-h-64 overflow-y-auto"></div>
+      <button class="btn bg-violet-600 w-full mt-3" onclick="copySelectedPast()">Salin senaman terpilih</button>
+    </div>
+    <p id="copyMessage" class="text-xs text-emerald-300 mt-2 hidden" role="status"></p>
+  </section>
 
-        function calculateScore(dateKey = todayStr) {
-            const dayData = appData[dateKey];
-            if (!dayData || !dayData.exercises) return 0;
-            
-            let totalVolume = 0;
-            dayData.exercises.forEach(ex => {
-                totalVolume += (ex.sets * ex.reps * ex.weight);
-            });
-            return Math.round(totalVolume / 10);
-        }
+  <section class="panel p-4 sm:p-5">
+    <h2 class="font-bold text-lg">➕ Tambah senaman</h2>
+    <p class="text-xs muted mt-1 mb-4">Masukkan butiran latihan awak.</p>
+    <div class="space-y-3">
+      <input class="field" id="exerciseName" maxlength="100" placeholder="Nama senaman (cth. Dumbbell Press)">
+      <div class="grid grid-cols-3 gap-2">
+        <label class="text-xs muted">Set<input class="field mt-1" type="number" id="sets" min="1" max="100" value="3" inputmode="numeric"></label>
+        <label class="text-xs muted">Reps / set<input class="field mt-1" type="number" id="reps" min="1" max="1000" placeholder="10" inputmode="numeric"></label>
+        <label class="text-xs muted">Beban (kg)<input class="field mt-1" type="number" id="load" min="0" max="2000" step=".25" placeholder="10" inputmode="decimal"></label>
+      </div>
+      <button class="btn bg-sky-500 text-slate-950 w-full" onclick="addExercise()">+ Tambah ke sesi hari ini</button>
+    </div>
+  </section>
 
-        function saveBodyWeight() {
-            const val = parseFloat(document.getElementById('bodyWeightInput').value);
-            if (val) {
-                appData[todayStr].weight = val;
-                saveData();
-                document.getElementById('weightStatus').classList.remove('hidden');
-                setTimeout(() => document.getElementById('weightStatus').classList.add('hidden'), 2000);
-            }
-        }
+  <section class="panel p-4 sm:p-5">
+    <div class="flex items-center justify-between gap-2 mb-3"><div><h2 class="font-bold text-lg">✅ Workout hari ini</h2><p id="sessionSub" class="text-xs muted mt-1">Belum ada senaman direkodkan</p></div><button class="text-xs text-rose-300 font-semibold" onclick="clearToday()" id="clearBtn" hidden>Kosongkan</button></div>
+    <div id="exerciseList" class="space-y-3"></div>
+  </section>
 
-        function addExercise() {
-            const name = document.getElementById('exerciseName').value;
-            const sets = parseInt(document.getElementById('setsInput').value);
-            const reps = parseInt(document.getElementById('repsInput').value);
-            const weight = parseFloat(document.getElementById('weightInput').value);
+  <p class="text-center text-[11px] muted px-3">Data disimpan dalam browser/peranti ini. Eksport atau sandarkan data sebelum memadam data browser.</p>
+</main>
 
-            if (name && sets && reps && !isNaN(weight)) {
-                appData[todayStr].exercises.push({ id: Date.now(), name, sets, reps, weight, completed: false });
-                appData[todayStr].score = calculateScore();
-                saveData();
+<script>
+const HEIGHT_M = 1.68;
+const TARGET_BMI = 18.5;
+const TARGET_WEIGHT = TARGET_BMI * HEIGHT_M * HEIGHT_M;
+const VOLUME_TARGET = 10000;
+const STORAGE_KEY = 'gymAppData';
+const todayStr = localDateKey(new Date());
+let appData = loadData();
+let weightChart = null, progressChart = null;
 
-                document.getElementById('exerciseName').value = '';
-            }
-        }
-
-        function removeExercise(id) {
-            appData[todayStr].exercises = appData[todayStr].exercises.filter(ex => ex.id !== id);
-            appData[todayStr].score = calculateScore();
-            saveData();
-        }
-
-        function toggleComplete(id, isChecked) {
-            const ex = appData[todayStr].exercises.find(e => e.id === id);
-            if (ex) {
-                ex.completed = isChecked;
-                saveData(); 
-            }
-        }
-
-        function updateEx(id, field, value) {
-            const ex = appData[todayStr].exercises.find(e => e.id === id);
-            if (ex) {
-                ex[field] = parseFloat(value) || 0;
-                appData[todayStr].score = calculateScore(); 
-                saveData();
-            }
-        }
-
-        function populatePastDatesDropdown() {
-            const selectEl = document.getElementById('pastDatesSelect');
-            selectEl.innerHTML = '<option value="">-- Pilih Tarikh Rekod Sesi Lepas --</option>';
-
-            const sortedDates = Object.keys(appData).sort().reverse();
-            sortedDates.forEach(date => {
-                if (date !== todayStr && appData[date].exercises && appData[date].exercises.length > 0) {
-                    const option = document.createElement('option');
-                    option.value = date;
-                    option.innerText = `${date} (${appData[date].exercises.length} senaman)`;
-                    selectEl.appendChild(option);
-                }
-            });
-        }
-
-        function showPastExercises(date) {
-            const container = document.getElementById('pastExercisesContainer');
-            const listEl = document.getElementById('pastExercisesList');
-            document.getElementById('selectAllPast').checked = false;
-            
-            if (!date) {
-                container.classList.add('hidden');
-                return;
-            }
-
-            container.classList.remove('hidden');
-            const exercises = appData[date].exercises;
-
-            listEl.innerHTML = exercises.map(ex => `
-                <div class="flex items-center gap-2 p-2 bg-gray-800 rounded">
-                    <input type="checkbox" value="${ex.id}" class="past-ex-checkbox w-4 h-4">
-                    <div class="text-xs">
-                        <span class="font-bold text-white">${ex.name}</span>
-                        <span class="text-gray-400 block">${ex.sets}x${ex.reps} @ ${ex.weight}kg</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function toggleSelectAllPast(source) {
-            const checkboxes = document.querySelectorAll('.past-ex-checkbox');
-            checkboxes.forEach(cb => cb.checked = source.checked);
-        }
-
-        function copySelectedPast() {
-            const date = document.getElementById('pastDatesSelect').value;
-            const checkboxes = document.querySelectorAll('.past-ex-checkbox:checked');
-            
-            if(!date || checkboxes.length === 0) return;
-            
-            checkboxes.forEach(cb => {
-                const exId = parseInt(cb.value);
-                const originalEx = appData[date].exercises.find(e => e.id === exId);
-                
-                if(originalEx) {
-                    appData[todayStr].exercises.push({
-                        id: Date.now() + Math.random(), 
-                        name: originalEx.name,
-                        sets: originalEx.sets,
-                        reps: originalEx.reps,
-                        weight: originalEx.weight,
-                        completed: false 
-                    });
-                }
-            });
-            
-            appData[todayStr].score = calculateScore();
-            saveData();
-            
-            document.getElementById('pastDatesSelect').value = '';
-            document.getElementById('pastExercisesContainer').classList.add('hidden');
-        }
-
-
-        // --- LOGIK DASHBOARD & GAMIFICATION ---
-
-        function renderDashboard() {
-            const now = new Date();
-            const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            
-            let totalSessions = 0;
-            let totalVolume = 0;
-            let totalMonthlyScore = 0; 
-            
-            let weightHistory = [];
-
-            const sortedDates = Object.keys(appData).sort();
-
-            sortedDates.forEach(date => {
-                const day = appData[date];
-                if (day.weight) {
-                    weightHistory.push({ date, weight: day.weight });
-                }
-
-                if (date.startsWith(currentYearMonth)) {
-                    if (day.exercises && day.exercises.length > 0) {
-                        totalSessions++;
-                        day.exercises.forEach(ex => {
-                            totalVolume += (ex.sets * ex.reps * ex.weight);
-                        });
-                        totalMonthlyScore += (day.score || calculateScore(date));
-                    }
-                }
-            });
-
-            // 1. Logik Berat & Peratusan Naik/Turun
-            let latestWeight = 49.0;
-            let previousWeight = 49.0;
-            let weightBadgeHTML = `<span class="text-[10px] text-gray-500 bg-gray-700 px-1.5 py-0.5 rounded">Asas</span>`;
-
-            if (weightHistory.length > 0) {
-                latestWeight = weightHistory[weightHistory.length - 1].weight;
-                if (weightHistory.length > 1) {
-                    previousWeight = weightHistory[weightHistory.length - 2].weight;
-                    let diff = latestWeight - previousWeight;
-                    let percent = (diff / previousWeight) * 100;
-
-                    if (diff > 0) {
-                        weightBadgeHTML = `<span class="text-[10px] text-emerald-900 bg-emerald-400 px-1.5 py-0.5 rounded font-bold">▲ +${percent.toFixed(1)}%</span>`;
-                    } else if (diff < 0) {
-                        weightBadgeHTML = `<span class="text-[10px] text-red-900 bg-red-400 px-1.5 py-0.5 rounded font-bold">▼ ${percent.toFixed(1)}%</span>`;
-                    } else {
-                        weightBadgeHTML = `<span class="text-[10px] text-gray-400 bg-gray-700 px-1.5 py-0.5 rounded">Kekal</span>`;
-                    }
-                }
-            }
-
-            document.getElementById('weightChangeBadge').innerHTML = weightBadgeHTML;
-            document.getElementById('dashLatestWeight').innerText = `${latestWeight} Kg`;
-
-            // Logik BMI
-            const heightM = 1.68;
-            const currentBMI = (latestWeight / (heightM * heightM)).toFixed(1);
-            const targetWeightForIdealBMI = (18.5 * (heightM * heightM)).toFixed(1);
-            const weightGap = (targetWeightForIdealBMI - latestWeight).toFixed(1);
-
-            document.getElementById('dashBMI').innerText = `BMI: ${currentBMI}`;
-            document.getElementById('dashWeightGap').innerText = weightGap > 0 ? `${weightGap} kg lagi` : `Target Dicapai! 🎉`;
-
-            const startWeight = 49.0;
-            const totalToGain = targetWeightForIdealBMI - startWeight;
-            const gainedSoFar = latestWeight - startWeight;
-            const progressPercent = Math.max(5, Math.min(100, (gainedSoFar / (totalToGain || 1)) * 100));
-            document.getElementById('bmiProgressBar').style.width = `${progressPercent}%`;
-
-            // 2. Logik Pencapaian Volume (Target: 10,000 kg sebulan)
-            const targetVolume = 10000;
-            const volPercent = Math.min(100, (totalVolume / targetVolume) * 100);
-            document.getElementById('dashVolume').innerText = totalVolume >= 1000 ? `${(totalVolume/1000).toFixed(1)}t` : `${totalVolume} Kg`;
-            document.getElementById('volProgressBar').style.width = `${volPercent}%`;
-            document.getElementById('volPercentText').innerText = `${Math.floor(volPercent)}%`;
-
-            // 3. Logik Sistem Rank (PTS)
-            let rankName = "Novice";
-            let nextRankTarget = 500;
-            
-            if (totalMonthlyScore >= 3000) { rankName = "Elite Lifter 👑"; nextRankTarget = 3000; }
-            else if (totalMonthlyScore >= 1500) { rankName = "Advanced 🔥"; nextRankTarget = 3000; }
-            else if (totalMonthlyScore >= 500) { rankName = "Intermediate ⚡"; nextRankTarget = 1500; }
-
-            let ptsProgress = 100;
-            let ptsRemaining = 0;
-            
-            if (totalMonthlyScore < 3000) {
-                // Formula utk bar (contoh Intermediate 500 -> 1500, range = 1000)
-                let prevRankCap = nextRankTarget === 500 ? 0 : (nextRankTarget === 1500 ? 500 : 1500);
-                let range = nextRankTarget - prevRankCap;
-                let currentProg = totalMonthlyScore - prevRankCap;
-                ptsProgress = (currentProg / range) * 100;
-                ptsRemaining = nextRankTarget - totalMonthlyScore;
-            }
-
-            document.getElementById('dashSessions').innerText = `${totalSessions} Sesi`;
-            document.getElementById('dashTotalScore').innerText = totalMonthlyScore;
-            document.getElementById('ptsRankName').innerText = `Level: ${rankName}`;
-            document.getElementById('ptsProgressBar').style.width = `${Math.max(5, ptsProgress)}%`;
-            
-            if (totalMonthlyScore >= 3000) {
-                document.getElementById('ptsNextRank').innerText = `Anda di tahap tertinggi!`;
-            } else {
-                document.getElementById('ptsNextRank').innerText = `Lagi ${ptsRemaining} PTS ke level seterus`;
-            }
-        }
-
-        function renderAll() {
-            const currentScore = calculateScore();
-            document.getElementById('fitnessScoreDisplay').innerText = `${currentScore} PTS`;
-
-            if (appData[todayStr].weight) {
-                document.getElementById('bodyWeightInput').value = appData[todayStr].weight;
-            }
-
-            const listEl = document.getElementById('exerciseList');
-            const exercises = appData[todayStr].exercises || [];
-
-            if (exercises.length === 0) {
-                listEl.innerHTML = `<p class="text-xs text-gray-500 italic text-center py-2">Belum ada senaman ditambah hari ini.</p>`;
-            } else {
-                listEl.innerHTML = exercises.map(ex => `
-                    <div class="bg-gray-700/50 p-3 rounded-lg flex flex-col gap-2 border border-gray-600/50 transition-all ${ex.completed ? 'opacity-50 bg-emerald-900/10 border-emerald-900/50' : ''}">
-                        
-                        <div class="flex justify-between items-center">
-                            <label class="flex items-center gap-3 cursor-pointer w-full">
-                                <input type="checkbox" onchange="toggleComplete(${ex.id}, this.checked)" class="w-5 h-5 rounded border-gray-500" ${ex.completed ? 'checked' : ''}>
-                                <span class="font-bold text-sm transition-all ${ex.completed ? 'line-through text-gray-500' : 'text-white'}">${ex.name}</span>
-                            </label>
-                            <button onclick="removeExercise(${ex.id})" class="text-red-400 hover:text-red-300 font-bold px-2 py-1 text-xs">Buang</button>
-                        </div>
-                        
-                        <div class="flex gap-2 items-center text-[11px] text-gray-400 mt-1 pl-8">
-                            <div class="flex items-center gap-1">
-                                Set: <input type="number" value="${ex.sets}" onchange="updateEx(${ex.id}, 'sets', this.value)" class="w-10 bg-gray-800 text-white text-center rounded border border-gray-600 py-1 focus:border-emerald-500">
-                            </div>
-                            <div class="flex items-center gap-1">
-                                Reps: <input type="number" value="${ex.reps}" onchange="updateEx(${ex.id}, 'reps', this.value)" class="w-10 bg-gray-800 text-white text-center rounded border border-gray-600 py-1 focus:border-emerald-500">
-                            </div>
-                            <div class="flex items-center gap-1">
-                                Kg: <input type="number" value="${ex.weight}" onchange="updateEx(${ex.id}, 'weight', this.value)" class="w-12 bg-gray-800 text-emerald-400 font-bold text-center rounded border border-gray-600 py-1 focus:border-emerald-500">
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            populatePastDatesDropdown();
-            renderDashboard();
-        }
-
-        renderAll();
-    </script>
+function localDateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function loadData() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch { return {}; }
+}
+function ensureDay(date) {
+  if (!appData[date] || typeof appData[date] !== 'object') appData[date] = {weight:null, exercises:[], score:0};
+  if (!Array.isArray(appData[date].exercises)) appData[date].exercises = [];
+  return appData[date];
+}
+ensureDay(todayStr);
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function volumeFor(day) {
+  return (day?.exercises || []).reduce((sum, ex) => sum + (Math.max(0,Number(ex.sets)||0) * Math.max(0,Number(ex.reps)||0) * Math.max(0,Number(ex.weight)||0)), 0);
+}
+function scoreFor(day) { return Math.round(volumeFor(day)/10); }
+function persist() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    renderAll();
+  } catch {
+    alert('Data tidak dapat disimpan. Semak ruang storan browser atau eksport data sebelum mencuba lagi.');
+  }
+}
+function saveBodyWeight() {
+  const input = document.getElementById('bodyWeight');
+  const val = Number(input.value);
+  if (!input.value.trim() || !Number.isFinite(val) || val <= 0 || val > 500) {
+    alert('Masukkan berat yang sah, dalam kg.');
+    return;
+  }
+  ensureDay(todayStr).weight = Math.round(val*10)/10;
+  persist();
+  const msg = document.getElementById('weightMessage');
+  msg.classList.remove('hidden');
+  setTimeout(() => msg.classList.add('hidden'), 2200);
+}
+function addExercise() {
+  const name = document.getElementById('exerciseName').value.trim();
+  const sets = Number(document.getElementById('sets').value);
+  const reps = Number(document.getElementById('reps').value);
+  const weight = Number(document.getElementById('load').value);
+  if (!name || !Number.isInteger(sets) || sets < 1 || !Number.isInteger(reps) || reps < 1 ||
+      document.getElementById('load').value === '' || !Number.isFinite(weight) || weight < 0) {
+    alert('Isi nama senaman, set, reps dan beban yang sah.');
+    return;
+  }
+  ensureDay(todayStr).exercises.push({id: makeId(), name, sets, reps, weight, completed:false});
+  document.getElementById('exerciseName').value = '';
+  persist();
+}
+function makeId() { return `${Date.now()}-${Math.random().toString(36).slice(2,9)}`; }
+function removeExercise(id) {
+  const day = ensureDay(todayStr);
+  day.exercises = day.exercises.filter(ex => String(ex.id) !== String(id));
+  persist();
+}
+function toggleComplete(id, checked) {
+  const ex = ensureDay(todayStr).exercises.find(e => String(e.id) === String(id));
+  if (ex) { ex.completed = checked; persist(); }
+}
+function updateEx(id, field, value) {
+  const ex = ensureDay(todayStr).exercises.find(e => String(e.id) === String(id));
+  if (!ex) return;
+  const n = Number(value);
+  if (value === '' || !Number.isFinite(n) || n < 0 || (field !== 'weight' && !Number.isInteger(n))) {
+    alert('Masukkan nilai yang sah.');
+    renderAll();
+    return;
+  }
+  ex[field] = n;
+  persist();
+}
+function populatePastDates() {
+  const select = document.getElementById('pastDate');
+  const oldValue = select.value;
+  const dates = Object.keys(appData).filter(date => date !== todayStr && Array.isArray(appData[date]?.exercises) && appData[date].exercises.length).sort().reverse();
+  select.innerHTML = '<option value="">Pilih tarikh rekod</option>' + dates.map(date => {
+    const count = appData[date].exercises.length;
+    return `<option value="${escapeHTML(date)}">${escapeHTML(date)} · ${count} senaman</option>`;
+  }).join('');
+  if (dates.includes(oldValue)) select.value = oldValue;
+}
+function showPastExercises() {
+  const date = document.getElementById('pastDate').value;
+  const wrap = document.getElementById('pastWrap');
+  const list = document.getElementById('pastList');
+  const all = document.getElementById('selectAll');
+  all.checked = false;
+  if (!date || !appData[date]) {
+    wrap.classList.add('hidden');
+    list.innerHTML = '';
+    return;
+  }
+  const exercises = appData[date].exercises || [];
+  list.innerHTML = exercises.map((ex, i) => `<label class="flex gap-3 items-start rounded-xl bg-slate-800/80 p-3">
+    <input type="checkbox" class="past-ex-checkbox mt-0.5" data-index="${i}">
+    <span class="min-w-0"><span class="block text-sm font-semibold break-words">${escapeHTML(ex.name)}</span><span class="block text-xs muted mt-1">${Number(ex.sets)||0} set × ${Number(ex.reps)||0} reps · ${Number(ex.weight)||0} kg</span></span>
+  </label>`).join('');
+  wrap.classList.remove('hidden');
+}
+function toggleSelectAll() {
+  document.querySelectorAll('.past-ex-checkbox').forEach(cb => cb.checked = document.getElementById('selectAll').checked);
+}
+function copySelectedPast() {
+  const date = document.getElementById('pastDate').value;
+  const source = appData[date];
+  if (!date || !source || !Array.isArray(source.exercises)) {
+    alert('Pilih tarikh rekod yang sah dahulu.');
+    return;
+  }
+  const selected = [...document.querySelectorAll('.past-ex-checkbox:checked')];
+  if (!selected.length) {
+    alert('Pilih sekurang-kurangnya satu senaman untuk disalin.');
+    return;
+  }
+  const target = ensureDay(todayStr);
+  selected.forEach(cb => {
+    const original = source.exercises[Number(cb.dataset.index)];
+    if (original) target.exercises.push({
+      id: makeId(), name: String(original.name || 'Senaman'),
+      sets: Number(original.sets)||1, reps: Number(original.reps)||1,
+      weight: Number(original.weight)||0, completed:false
+    });
+  });
+  persist();
+  document.getElementById('pastDate').value = '';
+  document.getElementById('pastWrap').classList.add('hidden');
+  const msg = document.getElementById('copyMessage');
+  msg.textContent = `${selected.length} senaman berjaya disalin ke sesi hari ini.`;
+  msg.classList.remove('hidden');
+  setTimeout(() => msg.classList.add('hidden'), 2500);
+}
+function clearToday() {
+  if (!confirm('Padam semua senaman hari ini? Rekod berat hari ini akan dikekalkan.')) return;
+  ensureDay(todayStr).exercises = [];
+  persist();
+}
+function renderDashboard() {
+  const now = new Date();
+  const month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('monthLabel').textContent = now.toLocaleDateString('ms-MY',{month:'long',year:'numeric'});
+  let sessions=0, volume=0, points=0;
+  const dates = Object.keys(appData).sort();
+  const weightHistory = dates.filter(d => Number(appData[d]?.weight)>0).map(d => ({date:d, weight:Number(appData[d].weight)}));
+  dates.forEach(date => {
+    const day = appData[date];
+    if (date.startsWith(month) && (day.exercises || []).length) {
+      sessions++;
+      volume += volumeFor(day);
+      points += scoreFor(day);
+    }
+  });
+  const latest = weightHistory.length ? weightHistory[weightHistory.length-1].weight : 49;
+  const previous = weightHistory.length > 1 ? weightHistory[weightHistory.length-2].weight : null;
+  document.getElementById('latestWeight').textContent = `${latest.toFixed(1)} kg`;
+  document.getElementById('targetWeight').textContent = `${TARGET_WEIGHT.toFixed(1)} kg`;
+  const gap = Math.max(0,TARGET_WEIGHT-latest);
+  document.getElementById('weightGap').textContent = gap > 0 ? `${gap.toFixed(1)} kg lagi` : 'Sasaran BMI dicapai';
+  document.getElementById('weightProgress').style.width = `${Math.max(0,Math.min(100,(latest/ TARGET_WEIGHT)*100))}%`;
+  document.getElementById('bmi').textContent = (latest/(HEIGHT_M*HEIGHT_M)).toFixed(1);
+  document.getElementById('weightTrend').textContent = previous === null ? 'Simpan rekod seterusnya untuk banding' : `${latest-previous>0?'+':''}${(latest-previous).toFixed(1)} kg berbanding rekod sebelumnya`;
+  document.getElementById('sessions').textContent = sessions;
+  document.getElementById('volume').textContent = volume >= 1000 ? `${(volume/1000).toFixed(1)}k kg` : `${Math.round(volume)} kg`;
+  document.getElementById('volumePct').textContent = `${Math.min(100,volume/VOLUME_TARGET*100).toFixed(0)}% daripada 10,000 kg`;
+  document.getElementById('monthlyPts').textContent = points;
+  document.getElementById('rank').textContent = points>=3000?'Elite Lifter 👑':points>=1500?'Advanced 🔥':points>=500?'Intermediate ⚡':'Novice';
+  document.getElementById('todayScore').textContent = `${scoreFor(ensureDay(todayStr))} PTS`;
+  drawCharts(weightHistory, dates.filter(d => d.startsWith(month) && (appData[d].exercises||[]).length).map(d => ({date:d, volume:volumeFor(appData[d])})));
+}
+function drawCharts(weights, sessions) {
+  if (typeof Chart === 'undefined') return;
+  const common = {responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}}, scales:{
+    x:{ticks:{color:'#94a3b8',maxRotation:0,autoSkip:true},grid:{color:'rgba(148,163,184,.08)'}},
+    y:{ticks:{color:'#94a3b8'},grid:{color:'rgba(148,163,184,.08)'},beginAtZero:false}
+  }};
+  if (weightChart) weightChart.destroy();
+  weightChart = new Chart(document.getElementById('weightChart'), {
+    type:'line', data:{labels:weights.map(x=>x.date.slice(5)), datasets:[{data:weights.map(x=>x.weight),borderColor:'#34d399',backgroundColor:'rgba(52,211,153,.12)',fill:true,tension:.3,pointRadius:3,pointBackgroundColor:'#34d399'}]},
+    options:{...common,scales:{...common.scales,y:{...common.scales.y,title:{display:true,text:'kg',color:'#94a3b8'}}}}
+  });
+  if (progressChart) progressChart.destroy();
+  progressChart = new Chart(document.getElementById('progressChart'), {
+    type:'bar', data:{labels:sessions.map(x=>x.date.slice(5)),datasets:[{data:sessions.map(x=>Math.round(x.volume)),backgroundColor:'rgba(96,165,250,.8)',borderRadius:6,maxBarThickness:32}]},
+    options:{...common,scales:{...common.scales,y:{...common.scales.y,title:{display:true,text:'Volum (kg)',color:'#94a3b8'}}}}
+  });
+}
+function renderExercises() {
+  const list = document.getElementById('exerciseList');
+  const exercises = ensureDay(todayStr).exercises;
+  document.getElementById('sessionSub').textContent = exercises.length ? `${exercises.length} senaman · volum ${Math.round(volumeFor(ensureDay(todayStr))).toLocaleString('ms-MY')} kg` : 'Belum ada senaman direkodkan';
+  document.getElementById('clearBtn').hidden = !exercises.length;
+  if (!exercises.length) {
+    list.innerHTML = '<div class="text-center py-8"><div class="text-3xl mb-2">💪</div><p class="text-sm muted">Sesi masih kosong.</p><p class="text-xs muted mt-1">Tambah senaman atau salin daripada rekod terdahulu.</p></div>';
+    return;
+  }
+  list.innerHTML = exercises.map(ex => `<article class="rounded-2xl p-3 border ${ex.completed?'border-emerald-500/30 bg-emerald-950/20':'border-slate-700 bg-slate-900/60'}">
+    <div class="flex items-start gap-3">
+      <input type="checkbox" class="mt-1" ${ex.completed?'checked':''} aria-label="Tandakan selesai" onchange="toggleComplete('${escapeHTML(ex.id)}',this.checked)">
+      <div class="flex-1 min-w-0"><p class="font-semibold text-sm break-words ${ex.completed?'line-through text-slate-400':''}">${escapeHTML(ex.name)}</p><p class="text-xs muted mt-1">Laraskan set, reps atau beban di bawah</p></div>
+      <button class="text-xs font-semibold text-rose-300 px-2 py-1" onclick="removeExercise('${escapeHTML(ex.id)}')">Buang</button>
+    </div>
+    <div class="grid grid-cols-3 gap-2 mt-3">
+      <label class="text-[11px] muted">Set<input class="field mt-1 !py-2 text-sm" type="number" min="1" value="${Number(ex.sets)||1}" onchange="updateEx('${escapeHTML(ex.id)}','sets',this.value)"></label>
+      <label class="text-[11px] muted">Reps<input class="field mt-1 !py-2 text-sm" type="number" min="1" value="${Number(ex.reps)||1}" onchange="updateEx('${escapeHTML(ex.id)}','reps',this.value)"></label>
+      <label class="text-[11px] muted">Kg<input class="field mt-1 !py-2 text-sm" type="number" min="0" step=".25" value="${Number(ex.weight)||0}" onchange="updateEx('${escapeHTML(ex.id)}','weight',this.value)"></label>
+    </div>
+  </article>`).join('');
+}
+function renderAll() {
+  const today = ensureDay(todayStr);
+  if (today.weight) document.getElementById('bodyWeight').value = today.weight;
+  renderExercises();
+  populatePastDates();
+  renderDashboard();
+}
+document.getElementById('pastDate').addEventListener('change', showPastExercises);
+document.getElementById('selectAll').addEventListener('change', toggleSelectAll);
+renderAll();
+</script>
 </body>
 </html>
